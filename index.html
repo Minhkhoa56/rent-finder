@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noimageindex">
+<title>Phòng trọ gần Sintex</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f5f1; --surface: #ffffff; --ink: #1d1d1b; --muted: #6b6a64; --line: #e4e2da;
+    --accent: #0f766e; --accent-soft: #d8efec; --warn: #b45309; --warn-soft: #fdf0dc;
+    --yes: #15803d; --yes-soft: #dcf3e3; --maybe: #6b6a64; --maybe-soft: #efeee9;
+    --office: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151514; --surface: #1f1f1d; --ink: #eceae3; --muted: #a09e96; --line: #33322e;
+      --accent: #2dd4bf; --accent-soft: #123a36; --warn: #f59e0b; --warn-soft: #3a2a10;
+      --yes: #4ade80; --yes-soft: #143322; --maybe: #a09e96; --maybe-soft: #2a2926;
+      --office: #fb923c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Be Vietnam Pro", system-ui, sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1280px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .layout { max-width: 1280px; margin: 0 auto; padding: 8px 16px 40px; display: grid; grid-template-columns: 1fr 440px; gap: 16px; align-items: start; }
+  .filters { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .filters label { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; cursor: pointer; }
+  .filters select, .filters input[type=range] { accent-color: var(--accent); }
+  .filters select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  .count { margin-left: auto; font-weight: 600; color: var(--accent); }
+  #list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .card:hover, .card.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .price { font-weight: 700; font-size: 18px; white-space: nowrap; }
+  .price.ask { color: var(--warn); font-size: 14px; }
+  .dist { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .title { font-weight: 600; }
+  .area { font-size: 13px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--maybe-soft); color: var(--maybe); }
+  .chip.yes { background: var(--yes-soft); color: var(--yes); }
+  .chip.likely { background: var(--accent-soft); color: var(--accent); }
+  .chip.no { text-decoration: line-through; opacity: .6; }
+  .text { font-size: 13px; color: var(--ink); opacity: .85; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card.open .text { -webkit-line-clamp: unset; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: auto; }
+  .foot a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .foot a:hover { text-decoration: underline; }
+  .contact { font-size: 13px; }
+  .mapwrap { position: sticky; top: 12px; }
+  #map { height: calc(100vh - 140px); min-height: 360px; border-radius: 12px; border: 1px solid var(--line); }
+  .legend { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .empty { color: var(--muted); padding: 24px; text-align: center; grid-column: 1/-1; }
+  .gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 4px; height: 190px; margin: -14px -14px 0; border-radius: 12px 12px 0 0; overflow: hidden; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; background: var(--maybe-soft); }
+  .gallery img:first-child { grid-row: 1 / -1; }
+  .gallery.n1 { grid-template-columns: 1fr; }
+  .gallery.n2 img:nth-child(2) { grid-row: 1 / -1; }
+  .gallery.n3 { grid-template-rows: 1fr 1fr; }
+  .gallery.n4 { grid-template-rows: 1fr 1fr 1fr; }
+  #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.88); display: none; align-items: center; justify-content: center; z-index: 2000; }
+  #lightbox.show { display: flex; }
+  #lightbox img { max-width: 92vw; max-height: 86vh; border-radius: 8px; }
+  #lightbox button { position: absolute; background: rgba(255,255,255,.12); color: #fff; border: 0; font-size: 28px; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; }
+  #lbPrev { left: 16px; } #lbNext { right: 16px; } #lbClose { top: 16px; right: 16px; font-size: 22px; }
+  #lbCount { position: absolute; bottom: 16px; color: #fff; font-size: 13px; opacity: .8; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .mapwrap { position: static; order: -1; }
+    #map { height: 320px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Phòng trọ 3–4.5 triệu gần Sintex (Bình Trưng)</h1>
+  <div class="sub">Tin Facebook đăng 28–29/09/2026 · trong bán kính ~5 km · khoảng cách là ước tính theo khu vực (đường đi ≈ đường chim bay × 1.3)</div>
+</header>
+
+<div class="layout">
+  <div class="filters">
+    <label><input type="checkbox" id="fPrice"> Chỉ tin có giá</label>
+    <label><input type="checkbox" id="fAC"> Máy lạnh</label>
+    <label><input type="checkbox" id="fLift"> Thang máy</label>
+    <label><input type="checkbox" id="fHours"> Giờ giấc tự do</label>
+    <label><input type="checkbox" id="fWasher"> Máy giặt riêng</label>
+    <label>Tối đa <input type="range" id="fDist" min="1" max="6" step="0.5" value="5"> <span id="fDistV">5</span> km</label>
+    <label>Sắp xếp
+      <select id="sort">
+        <option value="score">Phù hợp nhất</option>
+        <option value="dist">Gần nhất</option>
+        <option value="price">Giá thấp</option>
+        <option value="date">Mới nhất</option>
+      </select>
+    </label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <main id="list"></main>
+
+  <aside class="mapwrap">
+    <div id="map"></div>
+    <div class="legend">● cam = công ty · ● xanh = phòng (vị trí gần đúng) · vòng tròn = 5 km</div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<div id="lightbox">
+  <img id="lbImg" alt="">
+  <button id="lbPrev" aria-label="Ảnh trước">‹</button>
+  <button id="lbNext" aria-label="Ảnh sau">›</button>
+  <button id="lbClose" aria-label="Đóng">✕</button>
+  <span id="lbCount"></span>
+</div>
+
+<script src="data.js"></script>
+<script src="photos.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const toRad = (d) => d * Math.PI / 180;
+function haversine(a, b) {
+  const R = 6371, dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+const items = LISTINGS.map((l) => {
+  const straight = haversine(OFFICE, l);
+  return { ...l, straight, road: straight * 1.3, photos: (window.PHOTOS || {})[l.url] || [] };
+});
+
+let lb = { photos: [], i: 0 };
+function showLb() {
+  $("lbImg").src = lb.photos[lb.i];
+  $("lbCount").textContent = `${lb.i + 1} / ${lb.photos.length}`;
+  $("lightbox").classList.add("show");
+}
+function stepLb(d) { lb.i = (lb.i + d + lb.photos.length) % lb.photos.length; showLb(); }
+$("lbPrev").onclick = (e) => { e.stopPropagation(); stepLb(-1); };
+$("lbNext").onclick = (e) => { e.stopPropagation(); stepLb(1); };
+$("lbClose").onclick = () => $("lightbox").classList.remove("show");
+$("lightbox").onclick = (e) => { if (e.target.id === "lightbox") $("lightbox").classList.remove("show"); };
+document.addEventListener("keydown", (e) => {
+  if (!$("lightbox").classList.contains("show")) return;
+  if (e.key === "Escape") $("lightbox").classList.remove("show");
+  if (e.key === "ArrowLeft") stepLb(-1);
+  if (e.key === "ArrowRight") stepLb(1);
+});
+
+function yes(v) { return v === true || v === "riêng"; }
+function score(l) {
+  let s = 0;
+  if (l.price) s += 3;
+  if (yes(l.lift)) s += 2;
+  if (l.ac === true) s += 1.5; else if (l.ac === "likely") s += 1;
+  if (l.freeHours === true) s += 1.5; else if (l.freeHours === "likely") s += 1;
+  if (l.washer === "riêng") s += 0.5;
+  s -= l.road * 0.4;
+  return s;
+}
+
+function chip(label, v) {
+  if (v === true) return `<span class="chip yes">✓ ${label}</span>`;
+  if (v === "likely") return `<span class="chip likely">~ ${label}</span>`;
+  if (typeof v === "string") return `<span class="chip yes">✓ ${label} ${v}</span>`;
+  return `<span class="chip">? ${label}</span>`;
+}
+
+const map = L.map("map", { scrollWheelZoom: true }).setView([OFFICE.lat, OFFICE.lng], 13);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: "&copy; OpenStreetMap",
+}).addTo(map);
+const officeColor = getComputedStyle(document.documentElement).getPropertyValue("--office").trim();
+const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+L.circle([OFFICE.lat, OFFICE.lng], { radius: 5000, color: accent, weight: 1, fillOpacity: 0.04 }).addTo(map);
+L.circleMarker([OFFICE.lat, OFFICE.lng], { radius: 9, color: officeColor, fillColor: officeColor, fillOpacity: 1 })
+  .addTo(map).bindTooltip("Sintex (công ty)", { permanent: true, direction: "top", offset: [0, -8] });
+
+const markers = new Map();
+items.forEach((l) => {
+  const m = L.circleMarker([l.lat, l.lng], { radius: 7, color: accent, fillColor: accent, fillOpacity: 0.75, weight: 2 })
+    .bindPopup(`<b>${l.priceText}</b><br>${l.title}<br><small>${l.area} · ~${l.road.toFixed(1)} km</small><br><a href="${l.url}" target="_blank" rel="noopener">Mở bài viết</a>`);
+  m.on("click", () => highlight(l.id, true));
+  markers.set(l.id, m);
+});
+
+function highlight(id, scroll) {
+  document.querySelectorAll(".card").forEach((c) => c.classList.toggle("active", +c.dataset.id === id));
+  if (scroll) document.querySelector(`.card[data-id="${id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function render() {
+  const maxD = +$("fDist").value;
+  $("fDistV").textContent = maxD;
+  let list = items.filter((l) =>
+    l.road <= maxD &&
+    (!$("fPrice").checked || l.price) &&
+    (!$("fAC").checked || l.ac) &&
+    (!$("fLift").checked || l.lift) &&
+    (!$("fHours").checked || l.freeHours) &&
+    (!$("fWasher").checked || l.washer === "riêng"));
+  const sort = $("sort").value;
+  list.sort((a, b) =>
+    sort === "dist" ? a.road - b.road :
+    sort === "price" ? (a.price ? a.price[0] : 99) - (b.price ? b.price[0] : 99) :
+    sort === "date" ? b.date.localeCompare(a.date) :
+    score(b) - score(a));
+
+  $("count").textContent = `${list.length} / ${items.length} tin`;
+  const shown = new Set(list.map((l) => l.id));
+  markers.forEach((m, id) => { if (shown.has(id)) m.addTo(map); else m.remove(); });
+
+  $("list").innerHTML = list.length ? list.map((l) => `
+    <article class="card" data-id="${l.id}">
+      ${l.photos.length ? `<div class="gallery n${l.photos.length}">${l.photos.map((p, i) => `<img src="${p}" data-i="${i}" loading="lazy" alt="Ảnh ${i + 1}">`).join("")}</div>` : ""}
+      <div class="top">
+        <span class="price ${l.price ? "" : "ask"}">${l.priceText}</span>
+        <span class="dist">~${l.road.toFixed(1)} km</span>
+      </div>
+      <div>
+        <div class="title">${l.title}</div>
+        <div class="area">${l.area}</div>
+      </div>
+      <div class="chips">
+        ${chip("Máy lạnh", l.ac)}${chip("Thang máy", l.lift)}${chip("Giờ tự do", l.freeHours)}${l.washer ? chip("Máy giặt", l.washer) : ""}
+      </div>
+      <div class="text">${l.text}</div>
+      <div class="contact">📞 ${l.contact}</div>
+      <div class="foot">
+        <span>${l.date.slice(8, 10)}/${l.date.slice(5, 7)} ${l.date.slice(11)} · ${l.group}</span>
+        <a href="${l.url}" target="_blank" rel="noopener">Xem bài ↗</a>
+      </div>
+    </article>`).join("") : `<div class="empty">Không có tin nào khớp bộ lọc.</div>`;
+
+  document.querySelectorAll(".card").forEach((c) => {
+    c.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return;
+      const id = +c.dataset.id;
+      if (e.target.matches(".gallery img")) {
+        lb = { photos: items.find((l) => l.id === id).photos, i: +e.target.dataset.i };
+        return showLb();
+      }
+      c.classList.toggle("open");
+      highlight(id, false);
+      const m = markers.get(id);
+      map.setView(m.getLatLng(), 15);
+      m.openPopup();
+    });
+  });
+}
+
+["fPrice", "fAC", "fLift", "fHours", "fWasher", "fDist", "sort"].forEach((id) => $(id).addEventListener("input", render));
+render();
+</script>
+</body>
+</html>
