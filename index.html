@@ -71,6 +71,34 @@
   #lightbox button { position: absolute; background: rgba(255,255,255,.12); color: #fff; border: 0; font-size: 28px; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; }
   #lbPrev { left: 16px; } #lbNext { right: 16px; } #lbClose { top: 16px; right: 16px; font-size: 22px; }
   #lbCount { position: absolute; bottom: 16px; color: #fff; font-size: 13px; opacity: .8; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .btn { font: inherit; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 4px 8px; }
+  .btn.ghost:hover { color: var(--ink); background: var(--maybe-soft); }
+  #groupsDlg { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); }
+  #groupsDlg::backdrop { background: rgba(0,0,0,.45); }
+  #groupsDlg form { display: flex; flex-direction: column; max-height: calc(100vh - 50px); }
+  .dlg-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .dlg-head h2 { margin: 0; font-size: 17px; }
+  .dlg-add { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .dlg-add input, .grow input { font: inherit; font-size: 14px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-width: 0; }
+  .dlg-add input { flex: 1 1 200px; }
+  .dlg-err { flex-basis: 100%; color: var(--warn); font-size: 13px; min-height: 0; }
+  .dlg-err:empty { display: none; }
+  #groupList { list-style: none; margin: 0; padding: 4px 0; overflow-y: auto; flex: 1; }
+  #groupList li { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  #groupList li:last-child { border-bottom: 0; }
+  .grow { flex: 1; min-width: 0; }
+  .grow input { width: 100%; }
+  .gname { font-weight: 600; overflow-wrap: anywhere; }
+  .gname a { color: inherit; text-decoration: none; }
+  .gname a:hover { color: var(--accent); text-decoration: underline; }
+  .gmeta { font-size: 12px; color: var(--muted); }
+  .gtag { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-left: 4px; }
+  .dlg-foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  .dlg-foot .actions { display: flex; gap: 8px; }
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
     .mapwrap { position: static; order: -1; }
@@ -80,9 +108,35 @@
 </head>
 <body>
 <header>
-  <h1>Phòng trọ 3–4.5 triệu gần Sintex (Bình Trưng)</h1>
-  <div class="sub">Tin Facebook đăng 28–29/09/2026 · trong bán kính ~5 km · khoảng cách là ước tính theo khu vực (đường đi ≈ đường chim bay × 1.3)</div>
+  <div>
+    <h1>Phòng trọ 3–4.5 triệu gần Sintex (Bình Trưng)</h1>
+    <div class="sub">Tin Facebook đăng 28–29/09/2026 · trong bán kính ~5 km · khoảng cách là ước tính theo khu vực (đường đi ≈ đường chim bay × 1.3)</div>
+  </div>
+  <button class="btn" id="groupsBtn" type="button">Nhóm FB</button>
 </header>
+
+<dialog id="groupsDlg" aria-labelledby="groupsTitle">
+  <form method="dialog">
+    <div class="dlg-head">
+      <h2 id="groupsTitle">Nhóm Facebook</h2>
+      <button class="btn ghost" value="close" aria-label="Đóng">✕</button>
+    </div>
+    <div class="dlg-add">
+      <input id="gUrl" placeholder="Link nhóm hoặc ID (facebook.com/groups/…)" autocomplete="off">
+      <input id="gName" placeholder="Tên nhóm" autocomplete="off">
+      <button class="btn primary" id="gAdd" type="button">Thêm</button>
+      <div class="dlg-err" id="gErr"></div>
+    </div>
+    <ul id="groupList"></ul>
+    <div class="dlg-foot">
+      <span>Thay đổi chỉ lưu trên trình duyệt này. Tải groups.js để lưu vào repo.</span>
+      <span class="actions">
+        <button class="btn" id="gReset" type="button">Khôi phục</button>
+        <button class="btn" id="gExport" type="button">Tải groups.js</button>
+      </span>
+    </div>
+  </form>
+</dialog>
 
 <div class="layout">
   <div class="filters">
@@ -121,6 +175,7 @@
 </div>
 
 <script src="data.js"></script>
+<script src="groups.js"></script>
 <script src="photos.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
@@ -258,6 +313,130 @@ function render() {
 
 ["fPrice", "fAC", "fLift", "fHours", "fWasher", "fDist", "sort"].forEach((id) => $(id).addEventListener("input", render));
 render();
+// ---- Facebook groups manager ----
+// groups.js is the committed list; local edits are stored as an overlay so later groups.js updates still show up.
+const G_KEY = "rentfinder.groups.v1";
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const groupIdOf = (url) => (url.match(/facebook\.com\/groups\/([^/?#]+)/) || [])[1];
+const postCount = items.reduce((m, l) => { const g = groupIdOf(l.url); m[g] = (m[g] || 0) + 1; return m; }, {});
+
+function loadOverlay() {
+  try {
+    const o = JSON.parse(localStorage.getItem(G_KEY));
+    if (o && typeof o === "object") return { added: o.added || [], removed: o.removed || [], renamed: o.renamed || {} };
+  } catch {}
+  return { added: [], removed: [], renamed: {} };
+}
+let overlay = loadOverlay();
+function saveOverlay() {
+  try { localStorage.setItem(G_KEY, JSON.stringify(overlay)); } catch {}
+}
+function currentGroups() {
+  const base = (window.GROUPS || []).map((g) => ({ ...g, custom: false }));
+  const baseIds = new Set(base.map((g) => g.id));
+  return [...base, ...overlay.added.filter((g) => !baseIds.has(g.id)).map((g) => ({ ...g, custom: true }))]
+    .filter((g) => !overlay.removed.includes(g.id))
+    .map((g) => ({ ...g, name: overlay.renamed[g.id] || g.name }));
+}
+
+// Accepts a group link (facebook.com/groups/<id-or-slug>/...) or a bare ID / slug.
+function parseGroup(input) {
+  const t = input.trim();
+  const fromUrl = t.match(/facebook\.com\/groups\/([A-Za-z0-9._-]+)/);
+  if (fromUrl) return fromUrl[1];
+  if (/^[A-Za-z0-9._-]+$/.test(t) && !/facebook|\//i.test(t)) return t;
+  return null;
+}
+
+let editing = null;
+function renderGroups() {
+  const groups = currentGroups().sort((a, b) => (postCount[b.id] || 0) - (postCount[a.id] || 0));
+  $("groupsBtn").textContent = `Nhóm FB (${groups.length})`;
+  $("groupList").innerHTML = groups.length ? groups.map((g) => {
+    const n = postCount[g.id] || 0;
+    const link = `https://www.facebook.com/groups/${encodeURIComponent(g.id)}/`;
+    const main = editing === g.id
+      ? `<input class="gedit" value="${esc(g.name)}" aria-label="Tên nhóm">`
+      : `<div class="gname"><a href="${link}" target="_blank" rel="noopener">${esc(g.name)}</a>${g.custom ? '<span class="gtag">mới</span>' : ""}</div>`;
+    return `<li data-id="${esc(g.id)}">
+      <div class="grow">${main}<div class="gmeta">ID ${esc(g.id)} · ${n ? `${n} tin` : "chưa có tin"}</div></div>
+      ${editing === g.id
+        ? `<button class="btn ghost" type="button" data-act="save">Lưu</button>`
+        : `<button class="btn ghost" type="button" data-act="edit" aria-label="Đổi tên">✎</button>`}
+      <button class="btn ghost" type="button" data-act="del" aria-label="Xoá">🗑</button>
+    </li>`;
+  }).join("") : `<li class="gmeta">Chưa có nhóm nào.</li>`;
+  const input = $("groupList").querySelector(".gedit");
+  if (input) { input.focus(); input.select(); }
+}
+
+function renameGroup(id, name) {
+  name = name.trim();
+  if (!name) return;
+  const added = overlay.added.find((g) => g.id === id);
+  if (added) added.name = name; else overlay.renamed[id] = name;
+  saveOverlay();
+}
+
+function addGroup() {
+  const id = parseGroup($("gUrl").value);
+  if (!id) { $("gErr").textContent = "Link hoặc ID nhóm không hợp lệ."; return; }
+  if (currentGroups().some((g) => g.id === id)) { $("gErr").textContent = "Nhóm này đã có trong danh sách."; return; }
+  const name = $("gName").value.trim() || id;
+  overlay.removed = overlay.removed.filter((r) => r !== id);
+  if ((window.GROUPS || []).some((g) => g.id === id)) { if (name !== id) overlay.renamed[id] = name; }
+  else overlay.added.push({ id, name });
+  saveOverlay();
+  $("gUrl").value = $("gName").value = $("gErr").textContent = "";
+  renderGroups();
+  $("gUrl").focus();
+}
+
+$("groupsBtn").onclick = () => { editing = null; $("gErr").textContent = ""; renderGroups(); $("groupsDlg").showModal(); };
+$("gAdd").onclick = addGroup;
+[$("gUrl"), $("gName")].forEach((el) => el.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addGroup(); } }));
+$("groupsDlg").addEventListener("click", (e) => { if (e.target === $("groupsDlg")) $("groupsDlg").close(); });
+
+$("groupList").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const id = btn.closest("li").dataset.id;
+  const g = currentGroups().find((x) => x.id === id);
+  if (btn.dataset.act === "edit") editing = id;
+  if (btn.dataset.act === "save") { renameGroup(id, btn.closest("li").querySelector(".gedit").value); editing = null; }
+  if (btn.dataset.act === "del") {
+    if (!confirm(`Xoá nhóm "${g.name}" khỏi danh sách?`)) return;
+    overlay.added = overlay.added.filter((x) => x.id !== id);
+    if (!g.custom) overlay.removed.push(id);
+    delete overlay.renamed[id];
+    saveOverlay();
+    if (editing === id) editing = null;
+  }
+  renderGroups();
+});
+$("groupList").addEventListener("keydown", (e) => {
+  if (!e.target.matches(".gedit")) return;
+  if (e.key === "Enter") { e.preventDefault(); renameGroup(editing, e.target.value); editing = null; renderGroups(); }
+  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); editing = null; renderGroups(); }
+});
+
+$("gReset").onclick = () => {
+  if (!confirm("Bỏ mọi thay đổi và quay về danh sách trong groups.js?")) return;
+  overlay = { added: [], removed: [], renamed: {} };
+  saveOverlay();
+  editing = null;
+  renderGroups();
+};
+$("gExport").onclick = () => {
+  const body = currentGroups().map((g) => `  { id: ${JSON.stringify(g.id)}, name: ${JSON.stringify(g.name)} },`).join("\n");
+  const text = `// Facebook groups to search for rental posts. Listings in data.js come from these.\n// Edit via the "Nhóm" popup on the page, then download the updated file and commit it.\nwindow.GROUPS = [\n${body}\n];\n`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));
+  a.download = "groups.js";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+renderGroups();
 </script>
 </body>
 </html>
